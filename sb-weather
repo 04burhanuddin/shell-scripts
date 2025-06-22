@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+LOCATION="${LOCATION:-}"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/sb-dwmblocks"
+CACHE_FILE="$CACHE_DIR/sb-weather-${LOCATION}"
+
+mkdir -p "$CACHE_DIR"
+
+if weather_data=$(curl -s --max-time 3 "wttr.in/${LOCATION}?format=%C+%t"); then
+  clean_data=$(echo "$weather_data" | tr -d '%')
+  echo "$clean_data" >"$CACHE_FILE"
+else
+  [ -f "$CACHE_FILE" ] && clean_data=$(cat "$CACHE_FILE") || clean_data="NODATA +0°C"
+fi
+
+get_icon_from_text() {
+  case "$1" in
+  "Clear") echo "" ;;
+  "Sunny") echo "" ;;
+  "Partly cloudy") echo "" ;;
+  "Cloudy") echo "" ;;
+  "Overcast") echo "" ;;
+  "Light rain") echo "" ;;
+  "Patchy rain possible") echo "" ;;
+  "Heavy rain") echo "" ;;
+  "Thunderstorm") echo "" ;;
+  "Fog" | "Mist" | "Haze") echo "" ;;
+  "Snow") echo "" ;;
+  "Rain") echo "" ;;
+  *) echo "" ;;
+  esac
+}
+
+cond=$(echo "$clean_data" | rev | cut -d' ' -f2- | rev)
+temp=$(echo "$clean_data" | awk '{print $NF}')
+
+nf_icon=$(get_icon_from_text "$cond")
+
+[ -z "$temp" ] && temp="-"
+
+printf " %s %s \n" "$nf_icon" "$temp"
