@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+state=$(nmcli -t -f WIFI g)
+active_iface=$(nmcli -t -f DEVICE,TYPE,STATE dev | awk -F: '$3=="connected"{print $1":"$2}' | head -n1)
+
+output="  Disconnect "
+
+if [ -n "$active_iface" ]; then
+  iface=$(echo "$active_iface" | cut -d: -f1)
+  type=$(echo "$active_iface" | cut -d: -f2)
+
+  if [ "$type" = "ethernet" ]; then
+    output="󰈀 Ethernet"
+  elif [ "$type" = "wifi" ]; then
+    ssid=$(nmcli -t -f active,ssid dev wifi | awk -F: '$1 == "yes" {print $2}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    signal=$(nmcli -t -f IN-USE,SIGNAL dev wifi | awk -F: '/^\*/ {print $2}')
+    output=" 󰖩 $ssid "
+  fi
+fi
+
+printf "%s\n" "$output"
