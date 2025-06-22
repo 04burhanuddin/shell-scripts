@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/sb-dwmblocks"
+CACHE_FILE="$CACHE_DIR/sb-crypto"
+API_URL="https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=idr"
+
+mkdir -p "$CACHE_DIR"
+
+if data=$(curl -sf --max-time 5 "$API_URL"); then
+  echo "$data" >"$CACHE_FILE"
+elif [ -f "$CACHE_FILE" ]; then
+  data=$(cat "$CACHE_FILE")
+else
+  data="{}"
+fi
+
+btc=$(echo "$data" | sed -n 's/.*"bitcoin":{"idr":\([^}]*\)}.*/\1/p')
+eth=$(echo "$data" | sed -n 's/.*"ethereum":{"idr":\([^}]*\)}.*/\1/p')
+
+format_rupiah() {
+  echo "$1" | rev | sed 's/...\B/&./g' | rev
+}
+
+btc_formatted=$(format_rupiah "$btc")
+eth_formatted=$(format_rupiah "$eth")
+
+[ -z "$btc_formatted" ] && btc_formatted="-"
+[ -z "$eth_formatted" ] && eth_formatted="-"
+
+btc_icon="󰆬"
+eth_icon="󰡪"
+
+printf " %s Rp%s  %s Rp%s\n" "$btc_icon" "$btc_formatted" "$eth_icon" "$eth_formatted"
