@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+BAT_PATH="/sys/class/power_supply/BAT0"
+AC_PATH=$(find /sys/class/power_supply/ -maxdepth 1 -type d -iname "AC*" | head -n 1)
+
+[ ! -d "$BAT_PATH" ] && printf " Battery not found\n" && exit 1
+
+CAPACITY=$(<"$BAT_PATH/capacity")
+STATUS=$(tr -d '\n' <"$BAT_PATH/status")
+ONLINE=0
+
+if [ -n "$AC_PATH" ] && [ -f "$AC_PATH/online" ]; then
+  ONLINE=$(<"$AC_PATH/online")
+fi
+
+if { [ "$STATUS" = "Charging" ] || [ "$STATUS" = "Not charging" ]; } && [ "$CAPACITY" -eq 100 ] && [ "$ONLINE" -eq 1 ]; then
+  STATUS="Full"
+fi
+
+if [ "$CAPACITY" -gt 100 ]; then
+  CAPACITY=100
+fi
+
+case "$STATUS" in
+"Charging" | "Not charging" | "Full")
+  if [ "$CAPACITY" -ge 100 ]; then
+    ICON="󰂅"
+  elif [ "$CAPACITY" -ge 90 ]; then
+    ICON="󰂋"
+  elif [ "$CAPACITY" -ge 80 ]; then
+    ICON="󰂊"
+  elif [ "$CAPACITY" -ge 70 ]; then
+    ICON="󰢞"
+  elif [ "$CAPACITY" -ge 60 ]; then
+    ICON="󰂉"
+  elif [ "$CAPACITY" -ge 50 ]; then
+    ICON="󰢝"
+  elif [ "$CAPACITY" -ge 40 ]; then
+    ICON="󰂈"
+  elif [ "$CAPACITY" -ge 30 ]; then
+    ICON="󰂇"
+  elif [ "$CAPACITY" -ge 20 ]; then
+    ICON="󰂆"
+  elif [ "$CAPACITY" -ge 10 ]; then
+    ICON="󰢜"
+  else
+    ICON="󱃍"
+  fi
+  ;;
+"Discharging")
+  if [ "$CAPACITY" -ge 100 ]; then
+    ICON="󰁹"
+  elif [ "$CAPACITY" -ge 90 ]; then
+    ICON="󰂂"
+  elif [ "$CAPACITY" -ge 80 ]; then
+    ICON="󰂁"
+  elif [ "$CAPACITY" -ge 70 ]; then
+    ICON="󰂀"
+  elif [ "$CAPACITY" -ge 60 ]; then
+    ICON="󰁿"
+  elif [ "$CAPACITY" -ge 50 ]; then
+    ICON="󰁾"
+  elif [ "$CAPACITY" -ge 40 ]; then
+    ICON="󰁽"
+  elif [ "$CAPACITY" -ge 30 ]; then
+    ICON="󰁼"
+  elif [ "$CAPACITY" -ge 20 ]; then
+    ICON="󰁻"
+  elif [ "$CAPACITY" -ge 10 ]; then
+    ICON="󰁺"
+  else
+    ICON="󱟥"
+  fi
+  ;;
+*)
+  ICON=""
+  ;;
+esac
+
+if [ "$STATUS" = "Full" ]; then
+  printf " %s %d%% Full \n" "$ICON" "$CAPACITY"
+else
+  printf " %s %d%% \n" "$ICON" "$CAPACITY"
+fi
