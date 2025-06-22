@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+icons=("󱑋" "󱑌" "󱑍" "󱑎" "󱑏" "󱑐" "󱑑" "󱑒" "󱑓" "󱑔" "󱑕" "󱑖")
+hour_mod=$((($(date +%-H) % 12)))
+((hour_mod == 0)) && hour_mod=12
+
+printf " %s %s \n" "${icons[hour_mod - 1]}" "$(date '+%H:%M')"
